@@ -4,9 +4,10 @@
 //   1. ~/.config/niri/config.kdl   (per-user; if it exists, this file is ignored)
 //   2. /etc/niri/config.kdl        (this file)
 //
-// This is niri 26.04's stock default-config.kdl with two changes:
+// This is niri 26.04's stock default-config.kdl with three changes:
 //   - the `spawn-at-startup "waybar"` line is replaced with Noctalia
 //   - `include "noctalia.kdl"` at the very bottom pulls in the Noctalia rules/binds
+//   - `include "yamazitte.kdl"` after it holds the image's own tweaks (keybinds)
 //
 // To customise per-user, either copy this whole file, or make a tiny
 // ~/.config/niri/config.kdl that does `include "/etc/niri/config.kdl"` and
@@ -651,3 +652,7 @@ binds {
 // Noctalia window rules, layer rules and keybinds live in their own file so
 // the section above stays identical to upstream niri and is easy to diff.
 include "noctalia.kdl"
+
+// Image-wide tweaks (e.g. keybinds that must work on Latin American layouts).
+// Included last so its binds win over the stock ones above.
+include "yamazitte.kdl"

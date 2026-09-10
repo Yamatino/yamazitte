@@ -37,6 +37,7 @@ dnf5 install -y --setopt=install_weak_deps=False \
 # Noctalia, so a fresh user gets a working session without any dotfiles.
 test -f /etc/niri/config.kdl
 test -f /etc/niri/noctalia.kdl
+test -f /etc/niri/yamazitte.kdl
 
 # Sanity-check that the config parses with the niri we just installed.
 # `niri validate` exits non-zero on syntax/unknown-option errors.

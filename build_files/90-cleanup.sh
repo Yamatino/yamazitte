@@ -1,18 +1,36 @@
 #!/bin/bash
-# Last step: remove things we do not want and tidy up.
+# Last step: remove Bazzite defaults we do not want, then tidy up build leftovers.
 set -ouex pipefail
 
-# --- Planned: drop Waydroid (useless on NVIDIA) -------------------------------
-# Not enabled yet. When ready, uncomment, push, and check the build log: dnf
-# will refuse (and fail the build) if anything else still requires waydroid.
-# Bazzite also ships helper bits around it that can go at the same time.
+# --- Remove unwanted Bazzite packages ----------------------------------------
+# waydroid  Android container; needs GPU support that NVIDIA does not offer.
+# lutris    game launcher; Faugus Launcher (Flatpak) + umu-launcher is used instead.
 #
-# dnf5 remove -y waydroid
-# rm -f /usr/bin/waydroid-choose-gpu /usr/bin/waydroid-launcher
-# rm -f /usr/share/applications/Waydroid.desktop
+# clean_requirements_on_remove=False: dnf5 normally also removes packages that
+# were pulled in only as dependencies of what you remove. Some of those (e.g.
+# Wine/Proton bits Lutris depends on) are still wanted by tools we keep, and
+# dnf cannot know that. Leaving them costs a little space and risks nothing.
+#
+# If a package we keep depends on one of these, dnf refuses and the build
+# fails naming it; that is the safety net, so read the log rather than force.
+dnf5 remove -y --setopt=clean_requirements_on_remove=False \
+    waydroid \
+    lutris
 
-# Make sure no repo we enabled during the build is left enabled on the
-# deployed system (nothing to do today; kept as the place to do it).
+# Bazzite's Waydroid helpers are plain files, not packages, so remove them by hand.
+# The ujust recipe file (82-bazzite-waydroid.just) stays: /usr/share/ublue-os/justfile
+# imports it by name, and removing it would break every `ujust` command.
+rm -f /usr/bin/waydroid-launcher /usr/bin/waydroid-choose-gpu
+
+# Nothing we keep should still reference the removed binaries.
+test ! -e /usr/bin/waydroid
+test ! -e /usr/bin/lutris
+
+# --- Build leftovers ----------------------------------------------------------
+# `bootc container lint` warns about these: dnf's runtime state under /run and
+# repo bookkeeping under /var/lib. Both are regenerated on first use, and /run
+# and /var are machine-local anyway, so nothing is lost by dropping them.
+rm -rf /run/dnf /var/lib/dnf/repos
 
 # Ensure the systemd unit the template enabled by default stays enabled.
 systemctl enable podman.socket

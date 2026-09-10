@@ -12,6 +12,8 @@ changes, and keep scripts commented so the repo itself teaches.
 - `build_files/build.sh` — overlays `system_files/` onto `/`, then runs `NN-*.sh` in order.
   Add a step = add a numbered script. Disable a step = rename it (e.g. `.disabled`).
 - `system_files/` — files copied verbatim to the same path in the image (`etc/`, `usr/`).
+  niri config: `etc/niri/config.kdl` is upstream's default untouched except two `include`s;
+  Noctalia bits go in `noctalia.kdl`, image-wide tweaks (keybinds) in `yamazitte.kdl`.
 - `image-template.env` — image name/org used by the Justfile and CI. Do not edit the Justfile.
 
 ## Rules that come from bootc

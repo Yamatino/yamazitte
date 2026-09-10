@@ -1,0 +1,13 @@
+// yamazitte's own niri tweaks, included from /etc/niri/config.kdl.
+// Keep image-wide (not machine-specific) settings here so config.kdl stays
+// identical to upstream niri and is easy to diff against new releases.
+
+binds {
+    // The stock bind for the hotkey overlay is Mod+Shift+Slash. On Latin
+    // American (and other) layouts "/" is itself Shift+7: XKB consumes the
+    // Shift to produce the "slash" keysym, so niri sees Mod+Slash and the
+    // stock bind never fires. Mod+Slash works on those layouts AND on US
+    // (where it is just Mod+/). The title makes the overlay list this
+    // combination instead of the stock one.
+    Mod+Slash hotkey-overlay-title="Show this help" { show-hotkey-overlay; }
+}
