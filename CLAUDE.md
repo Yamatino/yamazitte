@@ -40,8 +40,8 @@ tag `citrix`, asset `ICAClient-rhel-x86_64.rpm` (version-less name so the URL in
   `./dev-step.sh 20-citrix.sh` runs that script in a throwaway container from the base
   image and leaves you in a shell to inspect. Prefer this for iterating on one script.
 - Full build: `just build`
-- Pushing to `main` cancels any in-progress CI run (concurrency group), so batch commits
-  while a run you care about is still going.
+- Every push to `main` triggers a full ~15 min image rebuild and cancels any in-progress
+  run. Commit locally as you go; push only when a batch is ready (and only when asked).
 - CI: `gh run list --limit 1` / `gh run view --log-failed`
 - Rebase: `sudo bootc switch ghcr.io/yamatino/yamazitte:latest`; undo with `sudo bootc rollback`
 - niri config is validated at build time by `niri validate -c /etc/niri/config.kdl`
