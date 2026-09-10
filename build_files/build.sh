@@ -1,27 +1,24 @@
 #!/bin/bash
-
+# Entry point called from the Containerfile. Runs inside the image being built,
+# as root, with this repo's build_files/ and system_files/ bind-mounted at /ctx.
+#
+#   -o pipefail : a failing command in a pipe fails the pipe
+#   -u          : unset variables are errors
+#   -e          : any failing command aborts the build (so a broken step can't
+#                 silently produce a half-configured image)
+#   -x          : echo every command to the build log
 set -ouex pipefail
 
-# Copy the contents of system_files/ of the git repo to /
+# 1. Overlay system_files/ onto the root filesystem.
+#    Anything you put in system_files/etc or system_files/usr lands at the same
+#    path in the image. This is how we ship config files (niri, tmpfiles,
+#    signing policy) without writing them from a script.
 cp -avf "/ctx/system_files"/. /
 
-### Install packages
-
-# Packages can be installed from any enabled yum repo on the image.
-# RPMfusion repos are available by default in ublue main images
-# List of rpmfusion packages can be found here:
-# https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/43/x86_64/repoview/index.html&protocol=https&redirect=1
-
-# this installs a package from fedora repos
-dnf5 install -y tmux
-
-# Use a COPR Example:
-#
-# dnf5 -y copr enable ublue-os/staging
-# dnf5 -y install package
-# Disable COPRs so they don't end up enabled on the final image:
-# dnf5 -y copr disable ublue-os/staging
-
-#### Example for enabling a System Unit File
-
-systemctl enable podman.socket
+# 2. Run each customisation step in order. Numbering makes the order obvious
+#    and lets you disable a step by renaming it (e.g. 20-citrix.sh.disabled).
+for script in /ctx/[0-9][0-9]-*.sh; do
+    echo "::group::Running ${script}"
+    bash "${script}"
+    echo "::endgroup::"
+done

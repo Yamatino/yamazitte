@@ -1,0 +1,5 @@
+# Tell containers/image (used by bootc, podman, skopeo) where to look for
+# cosign signatures for our image: attached to the image in the registry.
+docker:
+  ghcr.io/yamatino/yamazitte:
+    use-sigstore-attachments: true

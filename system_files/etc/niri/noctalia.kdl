@@ -1,0 +1,30 @@
+// Noctalia integration for niri, included from /etc/niri/config.kdl.
+// Source: https://docs.noctalia.dev/noctalia/compositor-settings/niri/
+
+// Noctalia's own settings window opens floating at a sane size.
+window-rule {
+    match app-id="dev.noctalia.Noctalia"
+    open-floating true
+    default-column-width { fixed 1080; }
+    default-window-height { fixed 920; }
+}
+
+// Let Noctalia draw the wallpaper behind the overview backdrop.
+layer-rule {
+    match namespace="^noctalia-backdrop"
+    place-within-backdrop true
+}
+
+// Needed so Noctalia's launcher can focus/raise the windows it starts.
+debug {
+    honor-xdg-activation-with-invalid-serial
+}
+
+// Binds are merged with the ones in config.kdl; conflicting keys here win.
+// Mod+Comma (Noctalia's suggested "settings" key) is deliberately not used
+// because niri's default config binds it to consume-window-into-column.
+binds {
+    Mod+Space hotkey-overlay-title="Noctalia launcher"       { spawn-sh "noctalia msg panel-toggle launcher"; }
+    Mod+S     hotkey-overlay-title="Noctalia control center" { spawn-sh "noctalia msg panel-toggle control-center"; }
+    Alt+Tab   hotkey-overlay-title="Noctalia window switcher" { spawn-sh "noctalia msg window-switcher"; }
+}
