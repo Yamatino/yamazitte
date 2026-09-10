@@ -17,14 +17,27 @@ dnf5 remove -y --setopt=clean_requirements_on_remove=False \
     waydroid \
     lutris
 
-# Bazzite's Waydroid helpers are plain files, not packages, so remove them by hand.
+# Bazzite's own Waydroid integration is plain files, not part of the waydroid
+# package, so dnf leaves it behind and it has to go by hand: the launcher
+# wrappers, the "Force Restart Waydroid" app-menu entry and the pkexec helpers
+# + polkit policy/rules it uses. (Source: bazzite/system_files/desktop/shared.)
 # The ujust recipe file (82-bazzite-waydroid.just) stays: /usr/share/ublue-os/justfile
 # imports it by name, and removing it would break every `ujust` command.
-rm -f /usr/bin/waydroid-launcher /usr/bin/waydroid-choose-gpu
+rm -f /usr/bin/waydroid-launcher \
+      /usr/bin/waydroid-choose-gpu \
+      /etc/default/waydroid-launcher \
+      /usr/share/applications/waydroid-container-restart.desktop \
+      /usr/libexec/waydroid-container-restart \
+      /usr/libexec/waydroid-container-start \
+      /usr/libexec/waydroid-container-stop \
+      /usr/share/polkit-1/actions/org.bazzite.waydroid.policy \
+      /usr/share/polkit-1/rules.d/30-waydroid.rules
 
-# Nothing we keep should still reference the removed binaries.
+# Nothing we keep should still reference the removed binaries, and no
+# Waydroid app-menu entry may survive.
 test ! -e /usr/bin/waydroid
 test ! -e /usr/bin/lutris
+! ls /usr/share/applications/ | grep -qi waydroid
 
 # --- Build leftovers ----------------------------------------------------------
 # `bootc container lint` warns about these: dnf's runtime state under /run and
