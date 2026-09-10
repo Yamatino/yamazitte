@@ -50,6 +50,12 @@ test -x /usr/libexec/pam_kwallet_init
 # tray-launch (system_files) needs gdbus from glib2.
 command -v gdbus >/dev/null
 test -x /usr/bin/tray-launch
+# ujust niri-autologin (system_files 60-custom.just) needs the KDE config tools.
+command -v kwriteconfig6 >/dev/null
+command -v kreadconfig6 >/dev/null
+# A syntax error in 60-custom.just would break every ujust command: parse the
+# whole justfile (which imports it) now rather than on the user's machine.
+just -f /usr/share/ublue-os/justfile --list >/dev/null
 
 # Sanity-check that the config parses with the niri we just installed.
 # `niri validate` exits non-zero on syntax/unknown-option errors.

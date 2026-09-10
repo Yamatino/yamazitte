@@ -44,4 +44,6 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 # bootc's own sanity check: fails the build on things that would break at
 # deploy time, e.g. leftover files in /var without a tmpfiles.d rule,
 # content in /tmp, a broken /etc, missing kernel, etc.
-RUN bootc container lint
+# --fatal-warnings: warnings (e.g. a /etc/passwd user without sysusers.d, dnf
+# leftovers in /var) fail the build too. The image is warning-free; keep it so.
+RUN bootc container lint --fatal-warnings
