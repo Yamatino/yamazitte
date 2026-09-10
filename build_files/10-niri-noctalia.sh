@@ -20,7 +20,9 @@ dnf5 install -y --setopt=install_weak_deps=False \
     alacritty \
     fuzzel \
     swaylock \
-    brightnessctl
+    brightnessctl \
+    playerctl \
+    wev
 # Why each:
 #   xwayland-satellite      X11 apps (Citrix included) under niri; niri >= 25.08
 #                           launches it automatically when installed.
@@ -28,11 +30,15 @@ dnf5 install -y --setopt=install_weak_deps=False \
 #                           preferring gnome/gtk portals for screenshots/screencast/
 #                           file pickers. Bazzite only has the KDE one.
 #   gnome-keyring           secrets portal backend used by niri-portals.conf.
-#   alacritty/fuzzel/swaylock/brightnessctl
+#   alacritty/fuzzel/swaylock/brightnessctl/playerctl
 #                           referenced by niri's default keybinds (Mod+T, Mod+D,
-#                           Super+Alt+L, brightness keys). Noctalia has its own
-#                           launcher/lock on Mod+Space etc. so these are optional;
-#                           drop them if you rebind.
+#                           Super+Alt+L, brightness keys, media play/next/prev).
+#                           Bazzite ships none of them: Plasma has its own
+#                           equivalents. Noctalia has its own launcher/lock on
+#                           Mod+Space etc. so these are optional; drop them if
+#                           you rebind.
+#   wev                     prints key/mouse events; niri's config comments
+#                           point to it for finding a key's XKB name.
 
 # The system-wide config in /etc/niri/ (from system_files) already autostarts
 # Noctalia, so a fresh user gets a working session without any dotfiles.
