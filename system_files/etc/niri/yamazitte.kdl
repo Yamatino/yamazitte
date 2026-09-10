@@ -52,3 +52,10 @@ spawn-at-startup "/usr/libexec/pam_kwallet_init"
 // Tip: to autostart something that lives in the tray, wrap it so it waits for
 // Noctalia's tray to exist (see /usr/bin/tray-launch), e.g.:
 // spawn-at-startup "tray-launch" "flatpak" "run" "com.discordapp.Discord" "--start-minimized"
+
+// oniri (build_files/15-niri-extras.sh): a window that is alone on its
+// workspace fills the monitor instead of sitting in a half-width column with
+// empty space beside it. -T un-maximises it again when a second window opens,
+// so two windows tile as usual. Options need spawn-sh-at-startup.
+spawn-sh-at-startup "oniri -T"
+
