@@ -70,6 +70,19 @@ MULTIARCH_DIR=/usr/lib/x86_64-linux-gnu
 HAD_MULTIARCH_DIR=0
 [[ -e "${MULTIARCH_DIR}" ]] && HAD_MULTIARCH_DIR=1
 
+# --- Make /opt a real directory for the duration of the install -------------
+# On this image /opt is a symlink to var/opt (bootc layout). rpm >= 4.19
+# refuses to unpack files through a symlinked directory that no package owns
+# (symlink-attack hardening) and fails with "cpio: mkdir failed - No data
+# available". So: remember the symlink, replace it with a real directory,
+# install, and restore the symlink afterwards once the files have been moved.
+OPT_LINK_TARGET=""
+if [[ -L /opt ]]; then
+    OPT_LINK_TARGET="$(readlink /opt)"   # e.g. "var/opt"
+    rm /opt
+    mkdir /opt
+fi
+
 # --nodeps: skip dependency checking only; scriptlets and file installs run
 # normally. The %post scriptlet runs /opt/Citrix/ICAClient/util/integrate.sh,
 # which creates the .desktop symlinks and registers the .ica MIME type.
@@ -107,15 +120,20 @@ if [[ -d "${CA_DIR}" && -d "${ICAROOT}/keystore/cacerts" ]]; then
     fi
 fi
 
-# Relocate out of /var (see header). /opt is a symlink to /var/opt, so the RPM
-# actually wrote to /var/opt/Citrix.
+# --- Relocate to /usr/lib/opt and restore the /opt symlink ------------------
+# See the header: /usr/lib/opt is immutable image content, /var/opt is not.
 mkdir -p /usr/lib/opt
-mv /var/opt/Citrix /usr/lib/opt/Citrix
+mv /opt/Citrix /usr/lib/opt/Citrix
+if [[ -n "${OPT_LINK_TARGET}" ]]; then
+    rmdir /opt                          # fails loudly if anything else landed in /opt
+    ln -s "${OPT_LINK_TARGET}" /opt     # back to exactly what the base image had
+fi
 
 # Temporarily put a symlink where the directory was, so we can self-check that
 # the main binary is reachable the way Citrix expects (/opt -> /var/opt -> /usr/lib/opt)
 # and that every shared library it links against is present. Because we
 # bypassed rpm's dependency check, this ldd check is what proves wfica can run.
+mkdir -p /var/opt
 ln -s /usr/lib/opt/Citrix /var/opt/Citrix
 test -x "${ICAROOT}/wfica"
 if ldd "${ICAROOT}/wfica" | grep -q "not found"; then
