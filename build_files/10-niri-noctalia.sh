@@ -2,7 +2,8 @@
 # niri (scrollable-tiling Wayland compositor) + Noctalia (desktop shell).
 #
 # Both are in the stock Fedora 44 repos, which Bazzite already has enabled, so
-# no COPR is needed. Bazzite's SDDM lists any *.desktop in
+# no COPR is needed. Bazzite's login manager (Plasma Login Manager, an SDDM
+# successor; config in /etc/plasmalogin.conf) lists any *.desktop in
 # /usr/share/wayland-sessions, and the niri package ships one, so after the
 # rebase "niri" simply appears as a session choice on the login screen.
 set -ouex pipefail
