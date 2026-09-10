@@ -41,3 +41,14 @@ window-rule {
     default-floating-position x=10 y=10 relative-to="bottom-right"
     open-focused false
 }
+
+// Unlock KWallet at login. Chrome/Chromium, some Flatpaks and KDE apps keep
+// their secrets in KWallet on this KDE-based image. Plasma unlocks it through
+// PAM during login; in a niri session nothing does, so apps would prompt for
+// the wallet password (or fail to save passwords). pam_kwallet_init hands the
+// login password captured by PAM over to the wallet daemon.
+spawn-at-startup "/usr/libexec/pam_kwallet_init"
+
+// Tip: to autostart something that lives in the tray, wrap it so it waits for
+// Noctalia's tray to exist (see /usr/bin/tray-launch), e.g.:
+// spawn-at-startup "tray-launch" "flatpak" "run" "com.discordapp.Discord" "--start-minimized"

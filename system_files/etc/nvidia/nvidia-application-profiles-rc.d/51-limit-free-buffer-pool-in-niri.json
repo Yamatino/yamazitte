@@ -1,0 +1,24 @@
+{
+  "_comment": [
+    "NVIDIA ships a profile (50-limit-free-buffer-pool-in-wayland-compositors)",
+    "that sets GLVidHeapReuseRatio=0 for known Wayland compositors such as",
+    "kwin_wayland and gnome-shell, so the driver stops hoarding freed video",
+    "memory and the compositor's memory use does not creep up over long",
+    "sessions. niri is not on NVIDIA's list; this adds it. Distinct file and",
+    "profile names so it adds to NVIDIA's rules instead of colliding with them.",
+    "Docs: https://download.nvidia.com/XFree86/Linux-x86_64/580.65.06/README/profiles.html",
+    "Idea from https://github.com/DataLabTechTV/dltos"
+  ],
+  "rules": [
+    {
+      "pattern": { "feature": "procname", "matches": "niri" },
+      "profile": "Limit Free Buffer Pool In niri"
+    }
+  ],
+  "profiles": [
+    {
+      "name": "Limit Free Buffer Pool In niri",
+      "settings": [ { "key": "GLVidHeapReuseRatio", "value": 0 } ]
+    }
+  ]
+}

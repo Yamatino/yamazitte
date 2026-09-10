@@ -39,6 +39,11 @@ dnf5 install -y --setopt=install_weak_deps=False \
 test -f /etc/niri/config.kdl
 test -f /etc/niri/noctalia.kdl
 test -f /etc/niri/yamazitte.kdl
+# Referenced by spawn-at-startup in yamazitte.kdl; provided by kwallet-pam.
+test -x /usr/libexec/pam_kwallet_init
+# tray-launch (system_files) needs gdbus from glib2.
+command -v gdbus >/dev/null
+test -x /usr/bin/tray-launch
 
 # Sanity-check that the config parses with the niri we just installed.
 # `niri validate` exits non-zero on syntax/unknown-option errors.
