@@ -31,3 +31,14 @@ window-rule {
     border { off; }
     shadow { off; }
 }
+
+// Steam draws its own notification toasts as small X11 windows instead of
+// using the desktop notification daemon. niri opens them as floating windows,
+// which by default appear at the center of the screen. Park them in the
+// bottom-right corner and don't let them steal focus from whatever you're doing.
+// Source: https://github.com/niri-wm/niri/wiki/Application-Issues#steam
+window-rule {
+    match app-id="steam" title=r#"^notificationtoasts_\d+_desktop$"#
+    default-floating-position x=10 y=10 relative-to="bottom-right"
+    open-focused false
+}
