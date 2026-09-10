@@ -3,13 +3,12 @@
 // identical to upstream niri and is easy to diff against new releases.
 
 binds {
-    // The stock bind for the hotkey overlay is Mod+Shift+Slash. On Latin
-    // American (and other) layouts "/" is itself Shift+7: XKB consumes the
-    // Shift to produce the "slash" keysym, so niri sees Mod+Slash and the
-    // stock bind never fires. Mod+Slash works on those layouts AND on US
-    // (where it is just Mod+/). The title makes the overlay list this
-    // combination instead of the stock one.
-    Mod+Slash hotkey-overlay-title="Show this help" { show-hotkey-overlay; }
+    // The stock hotkey-overlay bind is Mod+Shift+Slash, i.e. Mod+? on a US
+    // keyboard. niri matches binds against a key's *base* symbol, before
+    // Shift is applied. On Latin American (and many other) layouts "/" is
+    // Shift+7, so the same physical chord has to be written Mod+Shift+7.
+    // The title makes the overlay advertise this combination.
+    Mod+Shift+7 hotkey-overlay-title="Show this help" { show-hotkey-overlay; }
 }
 
 // Bazzite autostarts KDE's "Xwayland Video Bridge" (it lets X11 apps such as
