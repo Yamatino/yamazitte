@@ -83,10 +83,33 @@ if [[ -L /opt ]]; then
     mkdir /opt
 fi
 
-# --nodeps: skip dependency checking only; scriptlets and file installs run
-# normally. The %post scriptlet runs /opt/Citrix/ICAClient/util/integrate.sh,
-# which creates the .desktop symlinks and registers the .ica MIME type.
-rpm -Uvh --nodeps "${RPM}"
+# --nodeps: skip dependency checking only.
+# --nopost: do NOT run the %post scriptlet implicitly; we run it ourselves
+#           right below, under our own control (see why).
+rpm -Uvh --nodeps --nopost "${RPM}"
+
+# --- Post-install integration, run explicitly -------------------------------
+# The RPM's %post is just /opt/Citrix/ICAClient/util/integrate.sh: it creates
+# the config/module.ini locale links wfica needs, the .desktop entries, the
+# .ica MIME registration, a logging service, udev rules. Two problems when it
+# runs inside a container build:
+#  * It probes GStreamer by executing Citrix's gst_play1.0, which loads every
+#    GStreamer plugin on the system. With no devices/D-Bus/audio server in the
+#    build container this hung the CI build indefinitely. Setting
+#    GST_TARGET_DIRS to a directory that does not exist makes the script take
+#    its "no GStreamer -> disable multimedia redirection" branch instead of
+#    probing. (HDX multimedia redirection is optional media offload; the
+#    browser -> .ica -> wfica workflow does not use it.)
+#  * Its systemctl/useradd calls print errors because there is no running
+#    systemd; harmless, the unit file is still written and enabled on boot.
+# timeout + stdin from /dev/null: if anything in this 4600-line vendor script
+# ever blocks again, fail the build after 5 minutes with a clear message
+# rather than hanging the CI job.
+if ! GST_TARGET_DIRS=/nonexistent timeout -k 10 300 \
+        /opt/Citrix/ICAClient/util/integrate.sh </dev/null; then
+    echo "ERROR: Citrix integrate.sh failed or timed out (see output above)" >&2
+    exit 1
+fi
 
 # integrate.sh also tries to "help" with WebKit: if libwebkit2gtk-4.0.so.37 is
 # missing it untars a bundled *Ubuntu* build of it into / (Ubuntu paths, Ubuntu
