@@ -40,10 +40,17 @@ test ! -e /usr/bin/lutris
 ! ls /usr/share/applications/ | grep -qi waydroid
 
 # --- Build leftovers ----------------------------------------------------------
-# `bootc container lint` warns about these: dnf's runtime state under /run and
-# repo bookkeeping under /var/lib. Both are regenerated on first use, and /run
-# and /var are machine-local anyway, so nothing is lost by dropping them.
-rm -rf /run/dnf /var/lib/dnf/repos
+# `bootc container lint` warns about these, and the Containerfile runs it with
+# --fatal-warnings, so any leftover here fails the build:
+#   /run/dnf             dnf's runtime state
+#   /var/lib/dnf/repos   dnf repo bookkeeping
+#   /run/selinux-policy  scratch files from the SELinux policy rebuild that the
+#                        `dnf5 remove` above triggers (waydroid-selinux's
+#                        uninstall scriptlet runs semodule, and Fedora's
+#                        /var/run -> /run policy helper writes there)
+# All are regenerated on first use; /run is a tmpfs on a booted system and
+# /var is machine-local anyway, so nothing is lost by dropping them.
+rm -rf /run/dnf /var/lib/dnf/repos /run/selinux-policy
 
 # Ensure the systemd unit the template enabled by default stays enabled.
 systemctl enable podman.socket
