@@ -28,7 +28,9 @@ dnf5 install -y --setopt=install_weak_deps=False \
 #                           launches it automatically when installed.
 #   xdg-desktop-portal-*    niri ships /usr/share/xdg-desktop-portal/niri-portals.conf
 #                           preferring gnome/gtk portals for screenshots/screencast/
-#                           file pickers. Bazzite only has the KDE one.
+#                           file pickers. Bazzite only has the KDE one. We override
+#                           that file from system_files/etc/xdg-desktop-portal/ to
+#                           pin FileChooser to gtk (see the comment there).
 #   gnome-keyring           secrets portal backend used by niri-portals.conf.
 #   alacritty/fuzzel/swaylock/brightnessctl/playerctl
 #                           referenced by niri's default keybinds (Mod+T, Mod+D,
