@@ -5,6 +5,10 @@ set -ouex pipefail
 # --- Remove unwanted Bazzite packages ----------------------------------------
 # waydroid  Android container; needs GPU support that NVIDIA does not offer.
 # lutris    game launcher; Faugus Launcher (Flatpak) + umu-launcher is used instead.
+# konsole   KDE's terminal; Ghostty (10-niri-noctalia.sh) is the image's only
+#           terminal. Nothing in Bazzite depends on the package (checked with
+#           `rpm -q --whatrequires konsole`); the two things that *call* it are
+#           handled just below.
 #
 # clean_requirements_on_remove=False: dnf5 normally also removes packages that
 # were pulled in only as dependencies of what you remove. Some of those (e.g.
@@ -15,7 +19,9 @@ set -ouex pipefail
 # fails naming it; that is the safety net, so read the log rather than force.
 dnf5 remove -y --setopt=clean_requirements_on_remove=False \
     waydroid \
-    lutris
+    lutris \
+    konsole \
+    konsole-part
 
 # Bazzite's own Waydroid integration is plain files, not part of the waydroid
 # package, so dnf leaves it behind and it has to go by hand: the launcher
@@ -33,11 +39,31 @@ rm -f /usr/bin/waydroid-launcher \
       /usr/share/polkit-1/actions/org.bazzite.waydroid.policy \
       /usr/share/polkit-1/rules.d/30-waydroid.rules
 
+# Two Bazzite bits still point at Konsole and are plain files, so dnf leaves
+# them alone:
+#  - /usr/bin/kde-ptyxis is a two-line shim from when Bazzite's terminal was
+#    Ptyxis; it just execs konsole. Point it at Ghostty so any script or
+#    desktop entry still calling it keeps working (both accept `-e cmd`).
+#  - KDE apps (Dolphin's "Open Terminal", Kate...) read the terminal to use
+#    from kdeglobals and default to konsole. /etc/xdg/kdeglobals is Bazzite's
+#    file with its own settings, so edit it in place with kwriteconfig6
+#    rather than overwriting it from system_files (same idea as policy.json).
+cat > /usr/bin/kde-ptyxis <<'SHIM'
+#!/usr/bin/bash
+exec /usr/bin/ghostty "$@"
+SHIM
+chmod 0755 /usr/bin/kde-ptyxis
+kwriteconfig6 --file /etc/xdg/kdeglobals --group General --key TerminalApplication ghostty
+kwriteconfig6 --file /etc/xdg/kdeglobals --group General --key TerminalService com.mitchellh.ghostty.desktop
+
 # Nothing we keep should still reference the removed binaries, and no
-# Waydroid app-menu entry may survive.
+# Waydroid/Konsole app-menu entry may survive.
 test ! -e /usr/bin/waydroid
 test ! -e /usr/bin/lutris
+test ! -e /usr/bin/konsole
 ! ls /usr/share/applications/ | grep -qi waydroid
+! ls /usr/share/applications/ | grep -qi konsole
+grep -q '^TerminalApplication=ghostty$' /etc/xdg/kdeglobals
 
 # --- Build leftovers ----------------------------------------------------------
 # `bootc container lint` warns about these, and the Containerfile runs it with

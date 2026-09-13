@@ -17,7 +17,6 @@ dnf5 install -y --setopt=install_weak_deps=False \
     xdg-desktop-portal-gnome \
     xdg-desktop-portal-gtk \
     gnome-keyring \
-    alacritty \
     fuzzel \
     swaylock \
     brightnessctl \
@@ -32,15 +31,25 @@ dnf5 install -y --setopt=install_weak_deps=False \
 #                           that file from system_files/etc/xdg-desktop-portal/ to
 #                           pin FileChooser to gtk (see the comment there).
 #   gnome-keyring           secrets portal backend used by niri-portals.conf.
-#   alacritty/fuzzel/swaylock/brightnessctl/playerctl
-#                           referenced by niri's default keybinds (Mod+T, Mod+D,
+#   fuzzel/swaylock/brightnessctl/playerctl
+#                           referenced by niri's default keybinds (Mod+D,
 #                           Super+Alt+L, brightness keys, media play/next/prev).
 #                           Bazzite ships none of them: Plasma has its own
 #                           equivalents. Noctalia has its own launcher/lock on
 #                           Mod+Space etc. so these are optional; drop them if
-#                           you rebind.
+#                           you rebind. (Mod+T's terminal is Ghostty, below.)
 #   wev                     prints key/mouse events; niri's config comments
 #                           point to it for finding a key's XKB name.
+
+# Ghostty is the image's one terminal (Mod+T in /etc/niri/yamazitte.kdl; Konsole
+# is removed in 90-cleanup.sh). It is not in Fedora proper but in Terra, a
+# third-party repo Bazzite ships pre-configured but *disabled*, key included
+# (/etc/yum.repos.d/terra.repo). --enablerepo turns it on for this one command
+# only, so the repo stays disabled in the image: nothing else ever pulls from
+# it by accident, and the CLAUDE.md rule "disable what you enable" is
+# satisfied without a second step. The package also pulls in ghostty-terminfo.
+dnf5 install -y --setopt=install_weak_deps=False --enablerepo=terra ghostty
+command -v ghostty >/dev/null
 
 # The system-wide config in /etc/niri/ (from system_files) already autostarts
 # Noctalia, so a fresh user gets a working session without any dotfiles.
