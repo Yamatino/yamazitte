@@ -25,8 +25,10 @@ dnf5 remove -y --setopt=clean_requirements_on_remove=False \
 
 # Bazzite's own Waydroid integration is plain files, not part of the waydroid
 # package, so dnf leaves it behind and it has to go by hand: the launcher
-# wrappers, the "Force Restart Waydroid" app-menu entry and the pkexec helpers
-# + polkit policy/rules it uses. (Source: bazzite/system_files/desktop/shared.)
+# wrappers, the "Force Restart Waydroid" app-menu entry, the pkexec helpers
+# + polkit policy/rules it uses, and the Steam-library artwork directory
+# (/usr/share/applications/Waydroid/*.png, referenced from Waydroid.desktop's
+# X-Steam-Library-* keys). (Source: bazzite/system_files/desktop/shared.)
 # The ujust recipe file (82-bazzite-waydroid.just) stays: /usr/share/ublue-os/justfile
 # imports it by name, and removing it would break every `ujust` command.
 rm -f /usr/bin/waydroid-launcher \
@@ -38,6 +40,7 @@ rm -f /usr/bin/waydroid-launcher \
       /usr/libexec/waydroid-container-stop \
       /usr/share/polkit-1/actions/org.bazzite.waydroid.policy \
       /usr/share/polkit-1/rules.d/30-waydroid.rules
+rm -rf /usr/share/applications/Waydroid
 
 # Two Bazzite bits still point at Konsole and are plain files, so dnf leaves
 # them alone:
