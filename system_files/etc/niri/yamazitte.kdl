@@ -43,8 +43,23 @@ window-rule {
 // login password captured by PAM over to the wallet daemon.
 spawn-at-startup "/usr/libexec/pam_kwallet_init"
 
+// Polkit authentication agent. When an app asks for admin rights (Discover
+// installing a Flatpak, `pkexec`, GParted, NetworkManager storing a Wi-Fi
+// password...) polkit looks for an *agent* registered in the session to draw
+// the password dialog. Plasma autostarts KDE's agent, but its autostart entry
+// says OnlyShowIn=KDE, so under niri nobody registers and those requests just
+// hang or fail with no dialog. Noctalia has an agent of its own, but it is off
+// by default ([shell] polkit_agent = false) and has no system-wide config the
+// image could set. So run KDE's: it is already on the image and, thanks to
+// /etc/environment.d/50-yamazitte-qt.conf, drawn with the KDE theme.
+// polkit accepts ONE agent per session, and an include can add nodes but not
+// remove this one, so leave Noctalia's agent off unless you also stop using
+// this file (i.e. you keep your own full ~/.config/niri/config.kdl).
+spawn-at-startup "/usr/libexec/polkit-kde-authentication-agent-1"
+
 // Tip: to autostart something that lives in the tray, wrap it so it waits for
-// Noctalia's tray to exist (see /usr/bin/tray-launch), e.g.:
+// Noctalia's tray to exist (see /usr/bin/tray-launch), e.g. Discord (installed
+// by the image via /usr/share/flatpak/preinstall.d/yamazitte.preinstall):
 // spawn-at-startup "tray-launch" "flatpak" "run" "com.discordapp.Discord" "--start-minimized"
 
 // oniri (build_files/15-niri-extras.sh): a window that is alone on its

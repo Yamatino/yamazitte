@@ -31,13 +31,18 @@ dnf5 install -y --setopt=install_weak_deps=False \
 #                           that file from system_files/etc/xdg-desktop-portal/ to
 #                           pin FileChooser to gtk (see the comment there).
 #   gnome-keyring           secrets portal backend used by niri-portals.conf.
-#   fuzzel/swaylock/brightnessctl/playerctl
-#                           referenced by niri's default keybinds (Mod+D,
-#                           Super+Alt+L, brightness keys, media play/next/prev).
-#                           Bazzite ships none of them: Plasma has its own
-#                           equivalents. Noctalia has its own launcher/lock on
-#                           Mod+Space etc. so these are optional; drop them if
-#                           you rebind. (Mod+T's terminal is Ghostty, below.)
+#   playerctl               media keys (play/next/prev) in niri's default binds.
+#                           Bazzite ships none of these small tools: Plasma has
+#                           its own equivalents.
+#   fuzzel/swaylock/brightnessctl
+#                           what niri's *stock* binds for Mod+D, Super+Alt+L and
+#                           the brightness keys call. /etc/niri/noctalia.kdl
+#                           rebinds those keys to Noctalia's launcher, lock and
+#                           OSD, so these three are fallbacks for a session where
+#                           Noctalia is not running (run them from a terminal or
+#                           `niri msg action spawn -- swaylock`). Drop them if
+#                           you never want that safety net. (Mod+T's terminal
+#                           is Ghostty, below.)
 #   wev                     prints key/mouse events; niri's config comments
 #                           point to it for finding a key's XKB name.
 
@@ -58,6 +63,9 @@ test -f /etc/niri/noctalia.kdl
 test -f /etc/niri/yamazitte.kdl
 # Referenced by spawn-at-startup in yamazitte.kdl; provided by kwallet-pam.
 test -x /usr/libexec/pam_kwallet_init
+# Also spawned from yamazitte.kdl: KDE's polkit agent (package polkit-kde),
+# the only thing that draws password prompts for admin actions under niri.
+test -x /usr/libexec/polkit-kde-authentication-agent-1
 # tray-launch (system_files) needs gdbus from glib2.
 command -v gdbus >/dev/null
 test -x /usr/bin/tray-launch
