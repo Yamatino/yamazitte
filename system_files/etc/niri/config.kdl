@@ -4,14 +4,19 @@
 //   1. ~/.config/niri/config.kdl   (per-user; if it exists, this file is ignored)
 //   2. /etc/niri/config.kdl        (this file)
 //
-// This is niri 26.04's stock default-config.kdl with three changes:
+// This is niri 26.04's stock default-config.kdl with four changes:
 //   - the `spawn-at-startup "waybar"` line is replaced with Noctalia
 //   - `include "noctalia.kdl"` at the very bottom pulls in the Noctalia rules/binds
 //   - `include "yamazitte.kdl"` after it holds the image's own tweaks (keybinds)
+//   - two `include optional=true` lines last, for overrides that live outside
+//     the image: /etc/niri/local.kdl (this machine) and ~/.config/niri/local.kdl
+//     (this user). Neither has to exist.
 //
-// To customise per-user, either copy this whole file, or make a tiny
-// ~/.config/niri/config.kdl that does `include "/etc/niri/config.kdl"` and
-// then overrides only what you want (includes are positional and merge).
+// To customise, the cheapest option is to create one of those local.kdl files
+// and put only what you want to change in it: includes are positional and
+// merge, so a later definition of the same setting/bind wins over this file.
+// Copying this whole file to ~/.config/niri/config.kdl also works, but then
+// niri uses ONLY that copy and you stop receiving updates to this one.
 //
 // Docs: https://github.com/niri-wm/niri/wiki
 //       https://docs.noctalia.dev/noctalia/compositor-settings/niri/
@@ -654,5 +659,19 @@ binds {
 include "noctalia.kdl"
 
 // Image-wide tweaks (e.g. keybinds that must work on Latin American layouts).
-// Included last so its binds win over the stock ones above.
+// Included after the stock binds so its binds win over them.
 include "yamazitte.kdl"
+
+// Local overrides, outside the image. `optional=true` (niri >= 26.04) means a
+// missing file is only a warning in the niri log, not a config error; niri
+// still watches the path, so creating the file later hot-reloads it.
+//
+// /etc/niri/local.kdl: machine-specific settings such as `output` blocks or
+// this laptop's touchpad. On bootc, /etc is 3-way merged on upgrade: files you
+// add or edit there survive `bootc upgrade`, only untouched files track the image.
+include optional=true "/etc/niri/local.kdl"
+
+// ~/.config/niri/local.kdl: per-user overrides (binds, layout, window rules).
+// Only reached when ~/.config/niri/config.kdl does NOT exist, because niri
+// loads exactly one config file, and the per-user one takes precedence.
+include optional=true "~/.config/niri/local.kdl"
