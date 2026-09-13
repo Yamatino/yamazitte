@@ -36,20 +36,6 @@ window-rule {
     shadow { off; }
 }
 
-// Steam draws its own notification toasts ("X is playing Y", chat messages)
-// as small X11 windows instead of using the desktop notification daemon.
-// niri's floating heuristics do not always catch them, and a toast that is
-// tiled becomes a full-height column that shoves your other windows aside on
-// whatever workspace you are on. Force it floating, park it in the
-// bottom-right corner and don't let it steal focus from what you're doing.
-// Source: https://github.com/niri-wm/niri/wiki/Application-Issues#steam
-window-rule {
-    match app-id="^steam$" title=r#"^notificationtoasts_\d+_desktop$"#
-    open-floating true
-    default-floating-position x=10 y=10 relative-to="bottom-right"
-    open-focused false
-}
-
 // Unlock KWallet at login. Chrome/Chromium, some Flatpaks and KDE apps keep
 // their secrets in KWallet on this KDE-based image. Plasma unlocks it through
 // PAM during login; in a niri session nothing does, so apps would prompt for
