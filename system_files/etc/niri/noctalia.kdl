@@ -20,6 +20,11 @@ debug {
     honor-xdg-activation-with-invalid-serial
 }
 
+// Looks (rounded corners, blur behind windows and Noctalia's panels) are
+// deliberately NOT set by the image; they are taste, and cost GPU time. The
+// snippets are in Noctalia's niri page (link at the top of this file) under
+// "Compositor Settings" and "Blur": paste them into ~/.config/niri/local.kdl.
+
 // Binds are merged with the ones in config.kdl; conflicting keys here win.
 // Mod+Comma (Noctalia's suggested "settings" key) is deliberately not used
 // because niri's default config binds it to consume-window-into-column.
@@ -27,4 +32,24 @@ binds {
     Mod+Space hotkey-overlay-title="Noctalia launcher"       { spawn-sh "noctalia msg panel-toggle launcher"; }
     Mod+S     hotkey-overlay-title="Noctalia control center" { spawn-sh "noctalia msg panel-toggle control-center"; }
     Alt+Tab   hotkey-overlay-title="Noctalia window switcher" { spawn-sh "noctalia msg window-switcher"; }
+
+    // niri's stock config binds these to fuzzel and swaylock. Noctalia has its
+    // own launcher and lock screen (the lock is also what `loginctl
+    // lock-session` triggers while Noctalia runs), so point the stock keys at
+    // them. fuzzel and swaylock stay installed as fallbacks for a session
+    // where Noctalia is not running: `niri msg action spawn -- swaylock`.
+    Mod+D       hotkey-overlay-title="Run an Application: Noctalia" { spawn-sh "noctalia msg panel-toggle launcher"; }
+    Super+Alt+L hotkey-overlay-title="Lock the Screen: Noctalia"    { spawn-sh "noctalia msg session lock"; }
+
+    // Volume and brightness through Noctalia instead of wpctl/brightnessctl,
+    // so its OSD and bar widgets are the single source of truth and the step
+    // size is configured in one place (Noctalia settings). allow-when-locked
+    // keeps them working on the lock screen, like the stock binds.
+    // Mic mute and the media keys keep the stock wpctl/playerctl binds: Noctalia
+    // exposes no IPC for those.
+    XF86AudioRaiseVolume  allow-when-locked=true { spawn-sh "noctalia msg volume-up"; }
+    XF86AudioLowerVolume  allow-when-locked=true { spawn-sh "noctalia msg volume-down"; }
+    XF86AudioMute         allow-when-locked=true { spawn-sh "noctalia msg volume-mute"; }
+    XF86MonBrightnessUp   allow-when-locked=true { spawn-sh "noctalia msg brightness-up"; }
+    XF86MonBrightnessDown allow-when-locked=true { spawn-sh "noctalia msg brightness-down"; }
 }
