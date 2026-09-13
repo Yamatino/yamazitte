@@ -30,7 +30,11 @@ systemd-analyze verify "/usr/lib/systemd/system/${UNIT}"
 # runtime-only (a tmpfs on the booted system) and `bootc container lint`
 # fails the build if the image contains anything there, so drop it here,
 # next to what created it. Same idea as /run/dnf in 90-cleanup.sh.
-rm -rf /run/systemd
+# Only the file: /run/systemd/ also holds the resolv.conf that the container
+# runtime bind-mounts in for DNS during the build, so `rm -rf /run/systemd`
+# fails with "Device or resource busy". The lint knows about that mount and
+# ignores the directory once nothing else is in it.
+rm -f /run/systemd/systemd-units-load
 
 # `systemctl enable` in a container only creates the WantedBy symlink under
 # /etc/systemd/system/multi-user.target.wants/, which is exactly what we want
