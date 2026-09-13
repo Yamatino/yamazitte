@@ -23,7 +23,14 @@ flatpak preinstall --help >/dev/null
 
 # Catch typos in the unit file now. systemd-analyze reads the unit from disk;
 # it does not need a running systemd, which a container build does not have.
+# (It also prints warnings about Citrix's ctxcwalogd.service: those are
+# informational and not about our unit; only a non-zero exit fails the build.)
 systemd-analyze verify "/usr/lib/systemd/system/${UNIT}"
+# It leaves a marker file, /run/systemd/systemd-units-load, behind. /run is
+# runtime-only (a tmpfs on the booted system) and `bootc container lint`
+# fails the build if the image contains anything there, so drop it here,
+# next to what created it. Same idea as /run/dnf in 90-cleanup.sh.
+rm -rf /run/systemd
 
 # `systemctl enable` in a container only creates the WantedBy symlink under
 # /etc/systemd/system/multi-user.target.wants/, which is exactly what we want
