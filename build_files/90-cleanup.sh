@@ -58,11 +58,19 @@ kwriteconfig6 --file /etc/xdg/kdeglobals --group General --key TerminalService c
 
 # Nothing we keep should still reference the removed binaries, and no
 # Waydroid/Konsole app-menu entry may survive.
+# Written as `if ...; then exit 1` on purpose: a bare `! command` does NOT
+# abort under `set -e` (bash exempts negated commands from errexit), so the
+# previous `! ls | grep` form could never fail the build. shellcheck SC2251.
 test ! -e /usr/bin/waydroid
 test ! -e /usr/bin/lutris
 test ! -e /usr/bin/konsole
-! ls /usr/share/applications/ | grep -qi waydroid
-! ls /usr/share/applications/ | grep -qi konsole
+for leftover in waydroid konsole; do
+    if find /usr/share/applications -iname "*${leftover}*" | grep -q .; then
+        echo "ERROR: a ${leftover} app-menu entry survived the cleanup:" >&2
+        find /usr/share/applications -iname "*${leftover}*" >&2
+        exit 1
+    fi
+done
 grep -q '^TerminalApplication=ghostty$' /etc/xdg/kdeglobals
 
 # --- Build leftovers ----------------------------------------------------------
@@ -78,5 +86,8 @@ grep -q '^TerminalApplication=ghostty$' /etc/xdg/kdeglobals
 # /var is machine-local anyway, so nothing is lost by dropping them.
 rm -rf /run/dnf /var/lib/dnf/repos /run/selinux-policy
 
-# Ensure the systemd unit the template enabled by default stays enabled.
+# Keep podman's API socket enabled (Bazzite ships it enabled; the ublue
+# template repeats this so a custom image cannot lose it by accident). It is
+# what lets tools talk to podman over /run/podman/podman.sock, e.g.
+# Podman Desktop, `podman --remote`, and Docker-compatible clients.
 systemctl enable podman.socket

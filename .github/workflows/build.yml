@@ -46,6 +46,15 @@ jobs:
         run: |
           just check
 
+      # shellcheck every *.sh in the repo (build_files/, dev-step.sh) before
+      # spending ~15 min on the image build. The runner ships shellcheck.
+      # Not `just lint`: that recipe uses `find -exec`, whose exit status is
+      # find's own, so a shellcheck failure would never fail the job.
+      - name: Lint shell scripts
+        shell: bash
+        run: |
+          find . -name '*.sh' -type f -not -path './.git/*' -print0 | xargs -0 shellcheck
+
       - name: Image Name
         id: image-name
         run: |
