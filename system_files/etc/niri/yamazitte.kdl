@@ -55,7 +55,7 @@ spawn-at-startup "/usr/libexec/pam_kwallet_init"
 // polkit accepts ONE agent per session, and an include can add nodes but not
 // remove this one, so leave Noctalia's agent off unless you also stop using
 // this file (i.e. you keep your own full ~/.config/niri/config.kdl).
-spawn-at-startup "/usr/libexec/polkit-kde-authentication-agent-1"
+spawn-at-startup "/usr/libexec/kf6/polkit-kde-authentication-agent-1"
 
 // Tip: to autostart something that lives in the tray, wrap it so it waits for
 // Noctalia's tray to exist (see /usr/bin/tray-launch), e.g. Discord (installed

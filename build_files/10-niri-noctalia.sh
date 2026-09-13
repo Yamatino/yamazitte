@@ -65,7 +65,9 @@ test -f /etc/niri/yamazitte.kdl
 test -x /usr/libexec/pam_kwallet_init
 # Also spawned from yamazitte.kdl: KDE's polkit agent (package polkit-kde),
 # the only thing that draws password prompts for admin actions under niri.
-test -x /usr/libexec/polkit-kde-authentication-agent-1
+# Fedora installs KDE Frameworks 6 helpers under /usr/libexec/kf6/, not
+# /usr/libexec/ (the first build of this check failed on exactly that).
+test -x /usr/libexec/kf6/polkit-kde-authentication-agent-1
 # tray-launch (system_files) needs gdbus from glib2.
 command -v gdbus >/dev/null
 test -x /usr/bin/tray-launch
