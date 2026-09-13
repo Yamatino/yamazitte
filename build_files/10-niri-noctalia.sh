@@ -17,6 +17,7 @@ dnf5 install -y --setopt=install_weak_deps=False \
     xdg-desktop-portal-gnome \
     xdg-desktop-portal-gtk \
     gnome-keyring \
+    gnome-keyring-pam \
     fuzzel \
     swaylock \
     brightnessctl \
@@ -31,6 +32,18 @@ dnf5 install -y --setopt=install_weak_deps=False \
 #                           that file from system_files/etc/xdg-desktop-portal/ to
 #                           pin FileChooser to gtk (see the comment there).
 #   gnome-keyring           secrets portal backend used by niri-portals.conf.
+#                           It is also the Secret Service every browser and
+#                           Flatpak stores passwords in on this image.
+#   gnome-keyring-pam       unlocks the login keyring with the password you
+#                           typed at the login screen. Plasma Login Manager's
+#                           PAM stack (/usr/lib/pam.d/plasmalogin) already
+#                           calls it, but with a leading "-", which means "skip
+#                           silently if the module is not installed" -- and it
+#                           is only a *Recommends* of gnome-keyring, so
+#                           install_weak_deps=False above skipped it. The
+#                           result was a locked keyring on every boot and a
+#                           "keyring is locked" dialog the first time Chrome
+#                           wanted a password. Naming it explicitly is the fix.
 #   playerctl               media keys (play/next/prev) in niri's default binds.
 #                           Bazzite ships none of these small tools: Plasma has
 #                           its own equivalents.
@@ -63,6 +76,10 @@ test -f /etc/niri/noctalia.kdl
 test -f /etc/niri/yamazitte.kdl
 # Referenced by spawn-at-startup in yamazitte.kdl; provided by kwallet-pam.
 test -x /usr/libexec/pam_kwallet_init
+# The PAM module that unlocks the login keyring; see the comment above. The
+# plasmalogin PAM stack references it optionally, so a missing file is silent:
+# check for it here instead of discovering it as a password prompt at login.
+test -f /usr/lib64/security/pam_gnome_keyring.so
 # Also spawned from yamazitte.kdl: KDE's polkit agent (package polkit-kde),
 # the only thing that draws password prompts for admin actions under niri.
 # Fedora installs KDE Frameworks 6 helpers under /usr/libexec/kf6/, not

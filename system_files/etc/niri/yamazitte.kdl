@@ -36,11 +36,53 @@ window-rule {
     shadow { off; }
 }
 
-// Unlock KWallet at login. Chrome/Chromium, some Flatpaks and KDE apps keep
-// their secrets in KWallet on this KDE-based image. Plasma unlocks it through
-// PAM during login; in a niri session nothing does, so apps would prompt for
-// the wallet password (or fail to save passwords). pam_kwallet_init hands the
-// login password captured by PAM over to the wallet daemon.
+// --- System password prompts open floating, not as a tiled column ----------
+//
+// niri already floats a new window automatically when either
+//   * it has a parent toplevel (that is what an ordinary app dialog is), or
+//   * its height is fixed (min height == max height).
+// (src/window/mod.rs, compute_open_floating.)
+//
+// The prompts below satisfy neither. They are separate processes started over
+// D-Bus by a daemon -- the keyring, polkit, ssh -- so they have no parent
+// window to attach to (the daemon does not even know which app asked), and
+// they are resizable. niri therefore tiles them, and a password box ends up
+// owning half the screen next to your browser.
+//
+// There is no generic "float all dialogs" matcher in niri: `match` only takes
+// app-id/title and a few state flags, so each prompter needs naming. To find
+// the app-id of any window that lands in the wrong place, run
+// `niri msg windows` while it is open.
+//
+// gcr-prompter (package gcr3) is the GNOME keyring's "Authentication required
+// / the keyring is locked" box, used by Chrome and every Flatpak that stores
+// passwords in the Secret Service.
+window-rule {
+    match app-id="^gcr-prompter$"
+    open-floating true
+}
+
+// KDE's polkit agent (spawned below) and KDE's Secret Service prompt. Qt names
+// windows either after the binary or after the desktop file, so these patterns
+// are deliberately unanchored at the front to match both spellings
+// (polkit-kde-authentication-agent-1 and org.kde.polkit-kde-authentication-agent-1).
+window-rule {
+    match app-id="polkit-kde-authentication-agent-1$"
+    match app-id="secretprompter$"
+    open-floating true
+}
+
+// Unlock KWallet at login, for the KDE apps that talk to kwalletd directly
+// (Dolphin's saved network shares, KDE PIM). pam_kwallet_init hands kwalletd
+// the login password that pam_kwallet5.so captured during PAM auth.
+//
+// Note what this is NOT: the Secret Service (org.freedesktop.secrets) on this
+// image is gnome-keyring, so that is where Chrome, Flatpaks and anything using
+// the secrets portal put their passwords -- see gnome-keyring-pam in
+// build_files/10-niri-noctalia.sh for how that one gets unlocked.
+// Plasma Login Manager's PAM stack already lists pam_kwallet5.so for every
+// session it starts, niri included, so this line is a cheap safety net rather
+// than the thing that makes KWallet work.
 spawn-at-startup "/usr/libexec/pam_kwallet_init"
 
 // Polkit authentication agent. When an app asks for admin rights (Discover
