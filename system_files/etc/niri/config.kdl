@@ -672,6 +672,8 @@ include "yamazitte.kdl"
 include optional=true "/etc/niri/local.kdl"
 
 // ~/.config/niri/local.kdl: per-user overrides (binds, layout, window rules).
-// Only reached when ~/.config/niri/config.kdl does NOT exist, because niri
-// loads exactly one config file, and the per-user one takes precedence.
+// Reached whenever this file is loaded: either directly (no per-user config)
+// or through a `include "/etc/niri/config.kdl"` line in one. Note the position
+// in that second case: the include happens where that line is, so anything
+// written after it in the user's own config still wins over local.kdl.
 include optional=true "~/.config/niri/local.kdl"
