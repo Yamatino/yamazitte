@@ -1,0 +1,34 @@
+# Installs the Flatpaks listed in /usr/share/flatpak/preinstall.d/*.preinstall.
+#
+# flatpak-preinstall(1) says "the OS runs `flatpak preinstall -y` on system
+# startup", but Fedora's flatpak package ships no unit that does so and
+# Bazzite's bazzite-flatpak-manager does not call it either. This is that unit.
+# It is enabled at build time by build_files/40-flatpaks.sh.
+#
+# Runs on every boot on purpose: the command is a no-op when the installation
+# already matches the list, and re-running is what makes a list change in a
+# later image version take effect. Uninstalled apps are remembered by flatpak
+# and not reinstalled, so this never fights the user.
+[Unit]
+Description=Install the Flatpaks that are part of the yamazitte image
+Documentation=man:flatpak-preinstall(1)
+# Needs the network (downloads from Flathub) and the Flathub remote, which
+# Bazzite's manager registers. After= without Wants= on the Bazzite unit means
+# "if it runs this boot, run after it", never "pull it in".
+Wants=network-online.target
+After=network-online.target bazzite-flatpak-manager.service
+ConditionPathExists=/usr/bin/flatpak
+
+[Service]
+Type=oneshot
+# --system: the same system-wide installation Bazzite uses for its Flatpaks,
+# so the apps show up for every user. -y: never wait for a prompt.
+ExecStart=/usr/bin/flatpak preinstall -y --system
+# Flathub can be unreachable right after boot (Wi-Fi still connecting):
+# retry instead of giving up until the next boot. systemd allows on-failure
+# (not always) restarts for oneshot units.
+Restart=on-failure
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target

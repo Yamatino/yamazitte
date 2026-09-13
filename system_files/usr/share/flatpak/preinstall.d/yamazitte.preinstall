@@ -1,0 +1,23 @@
+# Flatpaks that are part of this image. See flatpak-preinstall(1).
+#
+# `flatpak preinstall -y` (run at boot by yamazitte-flatpak-preinstall.service)
+# syncs the system Flatpak installation to this list: entries added here get
+# installed on the next boot, so this file is the one place to edit. Users can
+# opt out by uninstalling an app; it is then remembered and not reinstalled.
+#
+# Bazzite has its own list in /usr/share/ublue-os/bazzite/flatpak/install, but
+# that one is only read by the ISO installer, not on a running system, which
+# is why this image uses Flatpak's native mechanism instead.
+#
+# Everything comes from Flathub, which bazzite-flatpak-manager.service sets up
+# as the system remote before our service runs. Branch=stable is Flathub's
+# branch name; without it flatpak would look for "master" and find nothing.
+
+# Game launcher for non-Steam games (umu-launcher + Proton); replaces Lutris,
+# which 90-cleanup.sh removes from the base image.
+[Flatpak Preinstall io.github.Faugus.faugus-launcher]
+Branch=stable
+
+# Lives in the tray: see the tray-launch tip in /etc/niri/yamazitte.kdl.
+[Flatpak Preinstall com.discordapp.Discord]
+Branch=stable
