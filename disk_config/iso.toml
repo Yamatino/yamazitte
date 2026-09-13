@@ -1,7 +1,16 @@
+# bootc-image-builder config for the Anaconda ISO (`just build-iso`, or the
+# "Build disk images" GitHub workflow). Started from the ublue template's KDE
+# variant: Bazzite is a KDE (kinoite) base, so this is the Anaconda module set
+# Bazzite's own installer uses.
+#
+# The ISO installs whatever image the workflow passes to bootc-image-builder,
+# but the installed system would then track that *local* build. The kickstart
+# %post below re-points it at the published image so `bootc upgrade` follows
+# CI from the first boot. Keep this in sync with image-template.env.
 [customizations.installer.kickstart]
 contents = """
 %post
-bootc switch --mutate-in-place --transport registry ghcr.io/ublue-os/image-template:latest
+bootc switch --mutate-in-place --transport registry ghcr.io/yamatino/yamazitte:latest
 %end
 """
 

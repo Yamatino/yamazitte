@@ -12,8 +12,13 @@ changes, and keep scripts commented so the repo itself teaches.
 - `build_files/build.sh` — overlays `system_files/` onto `/`, then runs `NN-*.sh` in order.
   Add a step = add a numbered script. Disable a step = rename it (e.g. `.disabled`).
 - `system_files/` — files copied verbatim to the same path in the image (`etc/`, `usr/`).
-  niri config: `etc/niri/config.kdl` is upstream's default untouched except two `include`s;
+  niri config: `etc/niri/config.kdl` is upstream's default untouched except its `include`s;
   Noctalia bits go in `noctalia.kdl`, image-wide tweaks (keybinds) in `yamazitte.kdl`.
+  It ends with `include optional=true` of `/etc/niri/local.kdl` and `~/.config/niri/local.kdl`
+  for machine/user overrides; looks (blur, corners) belong there, not in the image.
+- Flatpaks cannot live in the image (`/var`). The list of wanted apps is
+  `usr/share/flatpak/preinstall.d/yamazitte.preinstall`, applied at boot by
+  `yamazitte-flatpak-preinstall.service` (enabled in `40-flatpaks.sh`).
 - `image-template.env` — image name/org used by the Justfile and CI. Do not edit the Justfile.
 
 ## Rules that come from bootc
