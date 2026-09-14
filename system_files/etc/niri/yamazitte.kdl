@@ -54,6 +54,17 @@ window-rule {
 // the app-id of any window that lands in the wrong place, run
 // `niri msg windows` while it is open.
 //
+// Caveat for your own config: `open-floating` (from any rule, including the
+// ones here and niri's fixed-size heuristic) is silently ignored for a window
+// that is also pending maximized or fullscreen -- niri puts such windows in
+// the tiled layout "where they can do that" (layout/workspace.rs, add_tile).
+// So a match-less rule with `open-maximized-to-edges true` or `open-fullscreen
+// true` defeats every floating rule in the session: prompts, Steam's toasts and
+// the video-bridge window above all become tiled. Prefer oniri (see the bottom
+// of this file) to maximise lone windows; if you do want such a rule, give it
+// `exclude`s for the floating windows, or set `open-maximized-to-edges false`
+// in the floating rules that come after it.
+//
 // gcr-prompter (package gcr3) is the GNOME keyring's "Authentication required
 // / the keyring is locked" box, used by Chrome and every Flatpak that stores
 // passwords in the Secret Service.
