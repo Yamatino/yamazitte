@@ -30,7 +30,8 @@ dnf5 install -y --setopt=install_weak_deps=False \
 #                           preferring gnome/gtk portals for screenshots/screencast/
 #                           file pickers. Bazzite only has the KDE one. We override
 #                           that file from system_files/etc/xdg-desktop-portal/ to
-#                           pin FileChooser to gtk (see the comment there).
+#                           pin FileChooser to kde, the Dolphin-style dialog
+#                           Bazzite already ships (see the comment there).
 #   gnome-keyring           secrets portal backend used by niri-portals.conf.
 #                           It is also the Secret Service every browser and
 #                           Flatpak stores passwords in on this image.
