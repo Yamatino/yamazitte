@@ -35,7 +35,7 @@ the keybinds; `Mod+Space` is the launcher, `Mod+T` a Ghostty terminal.
 | `build_files/20-citrix.sh` | Citrix Workspace: installed from a GitHub Release asset, relocated from `/opt` to `/usr/lib/opt`. |
 | `build_files/30-image-signing.sh` | Adds this image's cosign key to `/etc/containers/policy.json`. |
 | `build_files/40-flatpaks.sh` | Enables the boot-time `flatpak preinstall` of the apps in `system_files/usr/share/flatpak/preinstall.d/`. |
-| `build_files/90-cleanup.sh` | Removes Bazzite bits we do not want (Waydroid, Lutris, Konsole) and build leftovers. |
+| `build_files/90-cleanup.sh` | Removes Bazzite bits we do not want (Lutris, Konsole) and build leftovers. |
 | `system_files/` | Files copied verbatim to the same path in the image. niri config lives in `etc/niri/`: `config.kdl` is upstream's default, `noctalia.kdl` the shell integration, `yamazitte.kdl` the image's own tweaks. |
 | `image-template.env` | Image name/org used by the `Justfile` and CI. |
 

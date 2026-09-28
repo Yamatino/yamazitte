@@ -3,7 +3,10 @@
 set -ouex pipefail
 
 # --- Remove unwanted Bazzite packages ----------------------------------------
-# waydroid  Android container; needs GPU support that NVIDIA does not offer.
+# (Waydroid is kept: it used to be removed here because it had no GPU
+#  acceleration on NVIDIA, but the NVIDIA images now ship Terra's
+#  waydroid-nvidia build, which has it. Set up with `ujust configure-waydroid`.)
+#
 # lutris    game launcher; Faugus Launcher (Flatpak) + umu-launcher is used instead.
 # konsole   KDE's terminal; Ghostty (10-niri-noctalia.sh) is the image's only
 #           terminal. Nothing in Bazzite depends on the package (checked with
@@ -18,29 +21,9 @@ set -ouex pipefail
 # If a package we keep depends on one of these, dnf refuses and the build
 # fails naming it; that is the safety net, so read the log rather than force.
 dnf5 remove -y --setopt=clean_requirements_on_remove=False \
-    waydroid \
     lutris \
     konsole \
     konsole-part
-
-# Bazzite's own Waydroid integration is plain files, not part of the waydroid
-# package, so dnf leaves it behind and it has to go by hand: the launcher
-# wrappers, the "Force Restart Waydroid" app-menu entry, the pkexec helpers
-# + polkit policy/rules it uses, and the Steam-library artwork directory
-# (/usr/share/applications/Waydroid/*.png, referenced from Waydroid.desktop's
-# X-Steam-Library-* keys). (Source: bazzite/system_files/desktop/shared.)
-# The ujust recipe file (82-bazzite-waydroid.just) stays: /usr/share/ublue-os/justfile
-# imports it by name, and removing it would break every `ujust` command.
-rm -f /usr/bin/waydroid-launcher \
-      /usr/bin/waydroid-choose-gpu \
-      /etc/default/waydroid-launcher \
-      /usr/share/applications/waydroid-container-restart.desktop \
-      /usr/libexec/waydroid-container-restart \
-      /usr/libexec/waydroid-container-start \
-      /usr/libexec/waydroid-container-stop \
-      /usr/share/polkit-1/actions/org.bazzite.waydroid.policy \
-      /usr/share/polkit-1/rules.d/30-waydroid.rules
-rm -rf /usr/share/applications/Waydroid
 
 # Two Bazzite bits still point at Konsole and are plain files, so dnf leaves
 # them alone:
@@ -60,20 +43,17 @@ kwriteconfig6 --file /etc/xdg/kdeglobals --group General --key TerminalApplicati
 kwriteconfig6 --file /etc/xdg/kdeglobals --group General --key TerminalService com.mitchellh.ghostty.desktop
 
 # Nothing we keep should still reference the removed binaries, and no
-# Waydroid/Konsole app-menu entry may survive.
+# Konsole app-menu entry may survive.
 # Written as `if ...; then exit 1` on purpose: a bare `! command` does NOT
 # abort under `set -e` (bash exempts negated commands from errexit), so the
 # previous `! ls | grep` form could never fail the build. shellcheck SC2251.
-test ! -e /usr/bin/waydroid
 test ! -e /usr/bin/lutris
 test ! -e /usr/bin/konsole
-for leftover in waydroid konsole; do
-    if find /usr/share/applications -iname "*${leftover}*" | grep -q .; then
-        echo "ERROR: a ${leftover} app-menu entry survived the cleanup:" >&2
-        find /usr/share/applications -iname "*${leftover}*" >&2
-        exit 1
-    fi
-done
+if find /usr/share/applications -iname '*konsole*' | grep -q .; then
+    echo "ERROR: a konsole app-menu entry survived the cleanup:" >&2
+    find /usr/share/applications -iname '*konsole*' >&2
+    exit 1
+fi
 grep -q '^TerminalApplication=ghostty$' /etc/xdg/kdeglobals
 
 # --- Build leftovers ----------------------------------------------------------
@@ -81,10 +61,13 @@ grep -q '^TerminalApplication=ghostty$' /etc/xdg/kdeglobals
 # --fatal-warnings, so any leftover here fails the build:
 #   /run/dnf             dnf's runtime state
 #   /var/lib/dnf/repos   dnf repo bookkeeping
-#   /run/selinux-policy  scratch files from the SELinux policy rebuild that the
-#                        `dnf5 remove` above triggers (waydroid-selinux's
-#                        uninstall scriptlet runs semodule, and Fedora's
-#                        /var/run -> /run policy helper writes there)
+#   /run/selinux-policy  scratch files from an SELinux policy rebuild, which
+#                        happens when a removed package ships its own policy
+#                        module (its uninstall scriptlet runs semodule, and
+#                        Fedora's /var/run -> /run policy helper writes there).
+#                        Nothing removed above does that today (waydroid-selinux
+#                        did, while Waydroid was removed); kept so a future
+#                        removal cannot fail the lint.
 # All are regenerated on first use; /run is a tmpfs on a booted system and
 # /var is machine-local anyway, so nothing is lost by dropping them.
 rm -rf /run/dnf /var/lib/dnf/repos /run/selinux-policy
