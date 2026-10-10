@@ -17,5 +17,14 @@
       "matchDepTypes": ["container"],
       "matchFileNames": [".github/workflows/**.yaml", ".github/workflows/**.yml"],
     },
+    {
+      // Leave the base image alone. The Containerfile tracks Bazzite's moving
+      // :stable tag on purpose, so the daily CI build picks up every upstream
+      // update (kernel, NVIDIA driver, Steam...) by itself. config:best-practices
+      // would pin it to a fixed @sha256 digest, which freezes the image on one
+      // Bazzite snapshot until someone merges a Renovate PR for each update.
+      "matchDepNames": ["ghcr.io/ublue-os/bazzite-nvidia-open"],
+      "enabled": false,
+    },
   ]
 }
