@@ -9,19 +9,15 @@ on:
         required: false
         default: false
         type: boolean
-      platform:
-        required: true
-        type: choice
-        options:
-          - amd64
-          - arm64
   pull_request:
     branches:
       - main
+    # Paths are matched relative to the repo root with no "./" prefix; the
+    # template's './disk_config/...' form never matched anything.
     paths:
-      - './disk_config/disk.toml'
-      - './disk_config/iso.toml'
-      - './.github/workflows/build-disk.yml'
+      - 'disk_config/disk.toml'
+      - 'disk_config/iso.toml'
+      - '.github/workflows/build-disk.yml'
 
 env:
   IMAGE_NAME: ${{ github.event.repository.name }} # output of build.yml, keep in sync
@@ -36,7 +32,9 @@ concurrency:
 jobs:
   build:
     name: Build disk images
-    runs-on: ${{ inputs.platform == 'amd64' && 'ubuntu-26.04' || 'ubuntu-26.04-arm' }}
+    # x86_64 only: the base (bazzite-nvidia-open) is published for amd64 alone,
+    # so the template's arm64 runner option could never produce a working disk.
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
@@ -60,16 +58,7 @@ jobs:
           echo "USER_UID=${USER_UID}" >> ${GITHUB_ENV}
           echo "USER_GID=${USER_GID}" >> ${GITHUB_ENV}
 
-      - name: Install dependencies
-        if: inputs.platform == 'arm64'
-        run: |
-          set -x
-          sudo apt update -y
-          sudo apt install -y \
-            podman
-
       - name: Maximize build space
-        if: inputs.platform != 'arm64'
         uses: ublue-os/remove-unwanted-software@695eb75bc387dbcd9685a8e72d23439d8686cba6
         with:
           remove-codeql: true

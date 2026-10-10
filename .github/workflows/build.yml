@@ -9,8 +9,15 @@ on:
   push:
     branches:
       - main
+    # A push that only touches these files cannot change the image, so it
+    # skips the ~15 min rebuild (and does not cancel one already running).
     paths-ignore:
       - '**/README.md'
+      - 'CLAUDE.md'
+      - 'LICENSE'
+      - '.github/renovate.json5'
+      - '.github/workflows/build-disk.yml'
+      - 'disk_config/**'
   workflow_dispatch:
 
 env:
