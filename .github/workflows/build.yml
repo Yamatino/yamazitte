@@ -15,7 +15,6 @@ on:
       - '**/README.md'
       - 'CLAUDE.md'
       - 'LICENSE'
-      - '.github/renovate.json5'
       - '.github/workflows/build-disk.yml'
       - 'disk_config/**'
   workflow_dispatch:
@@ -38,7 +37,9 @@ jobs:
       id-token: write
 
     steps:
-      # These stage versions are pinned by https://github.com/renovatebot/renovate
+      # Each action is pinned to an exact commit SHA (the version is in the
+      # comment), so it cannot change under us. Nothing bumps them
+      # automatically: update one by hand when GitHub deprecates it.
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
