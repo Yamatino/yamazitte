@@ -72,6 +72,20 @@ grep -q '^TerminalApplication=ghostty$' /etc/xdg/kdeglobals
 # /var is machine-local anyway, so nothing is lost by dropping them.
 rm -rf /run/dnf /var/lib/dnf/repos /run/selinux-policy
 
+# --- Nothing in the image may belong to a normal user ---------------------------
+# Everything under /usr and /etc in the base image is owned by root. A file or
+# directory owned by some other uid usually means a vendor script unpacked an
+# archive as root and tar restored the archive's owner. Citrix did exactly
+# that (see 20-citrix.sh): /usr itself ended up owned by uid 1000, which on the
+# booted machine is the first user account. -xdev stays on the image's own
+# filesystem; /ctx and the other build mounts are not part of the image.
+NON_ROOT="$(find /usr /etc -xdev ! -user root -printf '%u:%g %p\n')"
+if [[ -n "${NON_ROOT}" ]]; then
+    echo "ERROR: files in the image not owned by root:" >&2
+    echo "${NON_ROOT}" | head -50 >&2
+    exit 1
+fi
+
 # Keep podman's API socket enabled (Bazzite ships it enabled; the ublue
 # template repeats this so a custom image cannot lose it by accident). It is
 # what lets tools talk to podman over /run/podman/podman.sock, e.g.

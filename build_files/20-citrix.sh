@@ -64,12 +64,6 @@ dnf5 install -y --setopt=install_weak_deps=False \
     libICE libSM libX11 libXext libXinerama libXmu libXpm libXrender libXt \
     libpng libva speexdsp sqlite-libs
 
-# Fedora has no /usr/lib/x86_64-linux-gnu (that is Debian/Ubuntu's layout).
-# Remember whether it exists, because Citrix's post-install script will create it (below).
-MULTIARCH_DIR=/usr/lib/x86_64-linux-gnu
-HAD_MULTIARCH_DIR=0
-[[ -e "${MULTIARCH_DIR}" ]] && HAD_MULTIARCH_DIR=1
-
 # --- Make /opt a real directory for the duration of the install -------------
 # On this image /opt is a symlink to var/opt (bootc layout). rpm >= 4.19
 # refuses to unpack files through a symlinked directory that no package owns
@@ -87,6 +81,25 @@ fi
 # --nopost: do NOT run the %post scriptlet implicitly; we run it ourselves
 #           right below, under our own control (see why).
 rpm -Uvh --nodeps --nopost "${RPM}"
+
+# --- Keep Citrix's bundled Ubuntu WebKit out of the image --------------------
+# integrate.sh (below) tries to "help" with the missing WebKit: when it cannot
+# find libwebkit2gtk-4.0.so.37 it runs
+#   tar -xzvf Webkit2gtk4.0/webkit2gtk-4.0.tar.gz -C /
+# i.e. unpacks a 45 MB *Ubuntu* build of WebKit straight into the root
+# filesystem (Ubuntu paths like /usr/lib/x86_64-linux-gnu, Ubuntu library
+# versions; useless on Fedora). Worse: tar running as root restores the owner
+# recorded in the archive, uid 1000 on Citrix's build machine, and that
+# includes the archive's entries for directories that already exist. The image
+# shipped with /usr, /usr/lib and /usr/share owned by uid 1000 -- on a typical
+# machine, the first user account -- and systemd-tmpfiles then refused to
+# follow /usr/local ("unsafe path transition") at every boot.
+# Deleting the tarball first makes integrate.sh print "Error: ...
+# webkit2gtk-4.0.tar.gz not found" and carry on: the function's failure is
+# ignored and the script still ends with `exit 0`. That one error line in the
+# build log is expected. 90-cleanup.sh fails the build if anything in /usr or
+# /etc is ever owned by a non-root user again.
+rm -rf /opt/Citrix/ICAClient/Webkit2gtk4.0
 
 # --- Post-install integration, run explicitly -------------------------------
 # The RPM's %post is just /opt/Citrix/ICAClient/util/integrate.sh: it creates
@@ -111,15 +124,14 @@ if ! GST_TARGET_DIRS=/nonexistent timeout -k 10 300 \
     exit 1
 fi
 
-# integrate.sh also tries to "help" with WebKit: if libwebkit2gtk-4.0.so.37 is
-# missing it untars a bundled *Ubuntu* build of it into / (Ubuntu paths, Ubuntu
-# library versions). Those files are useless on Fedora and are not on the
-# linker path anyway, so drop them and the 45 MB tarball itself.
-[[ "${HAD_MULTIARCH_DIR}" == 0 ]] && rm -rf "${MULTIARCH_DIR}"
-rm -rf /usr/share/lintian \
-       /usr/share/doc/libwebkit2gtk-4.0-37 \
-       /usr/share/doc/libjavascriptcoregtk-4.0-18
-rm -rf /opt/Citrix/ICAClient/Webkit2gtk4.0
+# Prove the WebKit tarball stayed packed (see above). Fedora has no
+# /usr/lib/x86_64-linux-gnu, it is Debian/Ubuntu's library layout; if it
+# exists now, a future Citrix release moved the tarball and the rm above
+# needs updating.
+if [[ -e /usr/lib/x86_64-linux-gnu ]]; then
+    echo "ERROR: Citrix unpacked its Ubuntu WebKit into / (see 20-citrix.sh)" >&2
+    exit 1
+fi
 
 # Don't advertise the GUI that cannot run: remove its app-menu entry.
 # (The hidden x-scheme-handler entries and wfica.desktop, which handles .ica
