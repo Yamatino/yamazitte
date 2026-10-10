@@ -25,9 +25,9 @@ fetch_verified() {
 # window is un-maximised again when a second one opens, so a single window
 # fills the monitor but two windows tile as usual. Started for every niri
 # session from /etc/niri/yamazitte.kdl.
-ONIRI_VERSION=1.3.5
+ONIRI_VERSION=1.3.6
 fetch_verified \
-    6667d3f053f40227a4e4b4b46bda848be63159ab27d76f001e9cd736e15e440d \
+    10edfa079bf3ca81caf816fddbe922c9865624acf12d9fdcd50f692d3ed0806f \
     "https://github.com/Antiz96/oniri/releases/download/v${ONIRI_VERSION}/oniri-${ONIRI_VERSION}-x86_64" \
     /usr/bin/oniri
 chmod 0755 /usr/bin/oniri
