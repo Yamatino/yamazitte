@@ -70,6 +70,28 @@ dnf5 install -y --setopt=install_weak_deps=False \
 dnf5 install -y --setopt=install_weak_deps=False --enablerepo=terra ghostty
 command -v ghostty >/dev/null
 
+# Skip NVIDIA's "load nvidia-settings config" autostart under niri.
+# /etc/xdg/autostart/nvidia-settings-load.desktop (package nvidia-settings)
+# runs `nvidia-settings --load-config-only` at login, which applies saved
+# settings through NV-CONTROL, an X server extension. niri has no such X
+# server (xwayland-satellite does not provide it), so it exits 1 and leaves a
+# failed app-nvidia\x2dsettings\x2dload@autostart.service behind every login.
+# Desktop entries can opt out of desktops by name: NotShowIn= is matched
+# against $XDG_CURRENT_DESKTOP, which is "niri" in a niri session. systemd's
+# xdg-autostart generator turns it into an ExecCondition=, so under niri the
+# unit is skipped (not failed) and Plasma keeps running it. The line is added
+# with sed, right under the [Desktop Entry] header, leaving the rest of NVIDIA's
+# file untouched. (Not desktop-file-edit: it refuses "niri" because it is not
+# on freedesktop's list of registered desktop names; systemd does not care.)
+# The `if` keeps a future driver that drops the file, or adds its own
+# NotShowIn=, from failing the build over a cosmetic fix; the grep proves the
+# edit landed.
+NVIDIA_AUTOSTART=/etc/xdg/autostart/nvidia-settings-load.desktop
+if [[ -f "${NVIDIA_AUTOSTART}" ]] && ! grep -q '^NotShowIn=' "${NVIDIA_AUTOSTART}"; then
+    sed -i '/^\[Desktop Entry\]$/a NotShowIn=niri;' "${NVIDIA_AUTOSTART}"
+    grep -q '^NotShowIn=niri;$' "${NVIDIA_AUTOSTART}"
+fi
+
 # The system-wide config in /etc/niri/ (from system_files) already autostarts
 # Noctalia, so a fresh user gets a working session without any dotfiles.
 test -f /etc/niri/config.kdl
@@ -86,6 +108,12 @@ test -f /usr/lib64/security/pam_gnome_keyring.so
 # Fedora installs KDE Frameworks 6 helpers under /usr/libexec/kf6/, not
 # /usr/libexec/ (the first build of this check failed on exactly that).
 test -x /usr/libexec/kf6/polkit-kde-authentication-agent-1
+# Noctalia drives external monitors' brightness (its slider, the brightness
+# keys in noctalia.kdl) through ddcutil, over DDC/CI. It is a Recommends of
+# noctalia that the base already satisfies: Bazzite ships Terra's newer
+# build, package name terra-ddcutil (which conflicts with Fedora's ddcutil, so
+# do not add that to the list above). Checked by command, not by package name.
+command -v ddcutil >/dev/null
 # tray-launch (system_files) needs gdbus from glib2.
 command -v gdbus >/dev/null
 test -x /usr/bin/tray-launch
